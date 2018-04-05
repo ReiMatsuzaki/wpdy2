@@ -1,0 +1,12 @@
+local.mk
+*.log
+*.dat
+*.pyc
+external/
+build/
+*.o
+*.mod
+*.err
+example/*/out
+example/*/*/out
+example/*/*/*/out
