@@ -4,7 +4,9 @@ module Mod_WPDy
   implicit none
   integer :: nx_, nstate_
   double precision :: dx_
+  complex(kind(0d0)) :: dt_
   double precision, allocatable :: xs_(:), vs_(:,:,:), cvs_(:), frs_(:,:), frs0_(:,:)
+  complex(kind(0d0)), allocatable :: f_(:,:)
   double precision :: m_
   logical :: setupq_=.false.
 contains
@@ -15,6 +17,7 @@ contains
     nx_ = nx
     nstate_ = nstate
     dx_ = 0.1d0
+    dt_ = 0.1d0
     m_ = 1.0d0
     ierr = 0
     allocate(xs_(nx))                     ! grid points
@@ -22,7 +25,8 @@ contains
     allocate(cvs_(nx))    ! imaginary part of potential matrix
     allocate(frs_(nstate_, 0:2*nx-1))      ! real and imaginary part of WP
     allocate(frs0_(nstate_, 0:2*nx-1))     ! WP at t = 0
-
+    allocate(f_(nstate_, nx))
+    
     xs_(:)     = 0.0d0
     vs_(:,:,:) = 0.0d0
     cvs_(:)    = 0.0d0
@@ -91,6 +95,35 @@ contains
     frs0_(:,:) = frs_(:,:)
     setupq_ = .true.
   end subroutine WPDy_setup
+  subroutine WPDy_con(it, ierr)
+    use Mod_const, only : II
+    use con ! mangan4
+    integer, intent(in) :: it
+    integer, intent(out) :: ierr
+    double precision :: d, prob(nstate_)
+    integer n
+    ierr = 0
+!    do ix = 1, nx_
+!       do n = 1, nstate_
+!          f_(n,ix) = frs_(n, 2*(ix-1)) + II*frs_(n, 2*(ix-1)+1)
+!       end do
+!    end do
+    
+    call con_wf("t", it,  it*abs(dt_))
+    call con_wf2("f", it, frs_)
+
+    call WPDy_rn(0, d, ierr)
+    call con_wf("norm", it, d)
+    
+    call WPDy_rn(1, d, ierr)
+    call con_wf("r1", it, d)
+
+    do n = 1, nstate_
+       call WPDy_prob(n, prob(n), ierr)
+    end do
+    call con_wf1("prob", it, prob(:))
+
+  end subroutine WPDy_con
   subroutine WPDy_delete(ierr)
     integer, intent(out) :: ierr
     ierr = 0

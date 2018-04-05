@@ -1,6 +1,7 @@
 # -- Directories --
 SRC=${PROJ_ROOT}/src
 BUILD=${PROJ_ROOT}/build
+EXTERNAL=${PROJ_ROOT}/external
 VPATH=${BUILD}:${SRC}
 
 # -- common --
@@ -12,7 +13,7 @@ INCLUDE=-I${BUILD} -I${SRC}
 MODS0=const sys math timer strutil
 
 # -- command --
-clean:
+clean_all:
 	rm -f ${BUILD}/*.o
 	rm -f ${BUILD}/*.mod
 	rm -f ${BUILD}/*.x
@@ -34,11 +35,15 @@ ${BUILD}/%.o: ${SRC}/%.f90
 	cd ${BUILD}; ${FC} ${FF} ${INCLUDE} -c $< -o $@
 
 ${BUILD}/fft4g.o:
-	${FC} ../external/fft/fft4g.f -c -o $@ 
+	${FC} ${EXTERNAL}/fft/fft4g.f -c -o $@ 
 ${BUILD}/fftsg2d.o:
-	${FC} ../external/fft2d/fftsg2d.f -c -o $@
+	${FC} ${EXTERNAL}/fft2d/fftsg2d.f -c -o $@
+
+${BUILD}/con.o:
+	cd ${BUILD}; ${FC} ${MAN4ROOT}/src/con.f ${FF} ${INCLUDE} -c -o $@
+
 
 # -- exe --
-WPDYMODS=$(call mod2obj, ${MODS0} fft4g fftsg2d fft wpdy wpdy_sop utest utest_wpdy)
-${BUILD}/utest_wpdy.x: ${WPDYMODS}
+WPDYMODS=$(call mod2obj, ${MODS0} fft4g fftsg2d fft con wpdy wpdy_sop)
+${BUILD}/utest_wpdy.x: ${WPDYMODS}  utest utest_wpdy
 

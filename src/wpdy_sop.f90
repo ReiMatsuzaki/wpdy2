@@ -56,14 +56,13 @@ contains
     call FFT_delete(ierr); CHK_ERR(ierr)
   end subroutine WPDySOp_delete
   ! ==== calc ====
-  subroutine WPDySOp_inte(dt, ierr)
-    complex(kind(0d0)), intent(in) :: dt
+  subroutine WPDySOp_inte(ierr)
     integer, intent(out) :: ierr
     ierr = 0
     if(nstate_.eq.1) then
-       call inte_1(dt, ierr); CHK_ERR(ierr)
+       call inte_1(dt_, ierr); CHK_ERR(ierr)
     else if(nstate_.eq.2) then
-       call inte_2(dt, ierr); CHK_ERR(ierr)
+       call inte_2(dt_, ierr); CHK_ERR(ierr)
     else
        MSG_ERR("unsupported nstate")
        ierr = 1; return
