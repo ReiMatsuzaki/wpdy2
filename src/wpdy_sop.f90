@@ -15,7 +15,6 @@ contains
     integer, intent(in) :: nstate
     integer, intent(in) :: nx
     integer, intent(out) :: ierr
-    integer n
     ierr = 0
 
     if(nstate.ne.2 .and. nstate.ne.1) then
@@ -24,21 +23,9 @@ contains
        ierr = 1; return
     end if
 
-    n = nx
-    do
-       if(n.eq.1) goto 100
-       if(mod(n,2).ne.0) then
-          MSG_ERR("illegal nx")
-          write(0,*) "nx:", nx
-          ierr = 1; return
-       end if
-       n = n/2
-    end do
-100 continue
-    
+    call FFT_new(2*nx, ierr); CHK_ERR(ierr)
     call WPDy_new(nstate, nx, ierr); CHK_ERR(ierr)
     allocate(ks_(nx))
-    call fft_begin(2*nx)
     
   end subroutine WPDySOp_new
   subroutine WPDySOp_setup(ierr)
@@ -66,7 +53,7 @@ contains
     integer, intent(out) :: ierr
     call WPDy_delete(ierr); CHK_ERR(ierr)
     deallocate(ks_)
-    call FFT_end
+    call FFT_delete(ierr); CHK_ERR(ierr)
   end subroutine WPDySOp_delete
   ! ==== calc ====
   subroutine WPDySOp_inte(dt, ierr)

@@ -34,7 +34,7 @@ ${BUILD}/%.o: ${SRC}/%.f90
 	cd ${BUILD}; ${FC} ${FF} ${INCLUDE} -c $< -o $@
 
 ${BUILD}/fft4g.o:
-	${FC} ../external/fft/fft4g.f -c -o $@
+	${FC} ../external/fft/fft4g.f -c -o $@ 
 ${BUILD}/fftsg2d.o:
 	${FC} ../external/fft2d/fftsg2d.f -c -o $@
 

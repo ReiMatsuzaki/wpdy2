@@ -1,6 +1,27 @@
 #include "macros.fpp"
 #include "macros_utest.fpp"
-
+module Mod_Harmo0
+contains
+  subroutine calc_psi0(x, res, ierr)
+    use Mod_const, only : II
+    double precision, intent(in) :: x
+    complex(kind(0d0)), intent(out) :: res(:)
+    integer, intent(out) :: ierr
+    double precision x0, p0
+    x0 = 0.0d0
+    p0 = 0.0d0
+    ierr = 0
+    res(:) = 0
+    res(1) = exp(-5*(x-x0)**2 + II*p0*(x-x0))
+  end subroutine calc_psi0
+  subroutine calc_vs(x, res, ierr)
+    double precision, intent(in) :: x
+    double precision, intent(out) :: res(:,:)
+    integer, intent(out) :: ierr
+    ierr = 0
+    res = x**2
+  end subroutine calc_vs
+end module Mod_Harmo0
 module Mod_UTestWpdy
   use Mod_UTest
   use Mod_WPDySOp
@@ -18,6 +39,10 @@ contains
     call Timer_begin(timer, "test1", ierr)
     call Test1
     call Timer_end(  timer, "test1", ierr)
+
+    call Timer_begin(timer, "test2", ierr)
+    call Test2
+    call Timer_end(  timer, "test2", ierr)    
     
     write(*,*) 
     write(*,*) "UTestWPDy end"
@@ -28,32 +53,28 @@ contains
   end subroutine UTestWPDy_run
   subroutine Test1
     use Mod_const, only : ii
-    integer ix, it, ierr
+    use Mod_Harmo0
+    integer it, ierr
     integer, parameter :: nstate=1
-    double precision :: x0, p0, norm2, x
-    complex(kind(0d0)) :: f
+    double precision :: x0, p0, norm2
     
     x0 = 0.0d0
     p0 = 0.0d0
-    call WPDySOp_new(nstate, 256, ierr); CHK_ERR(ierr)
+    call WPDySOp_new(nstate, 256, ierr); CHK_ERR(ierr)    
     call WPDy_set_xs(-5.0d0, 0.1d0, ierr); CHK_ERR(ierr)
-    do ix = 1, nx_
-       x = xs_(ix)
-       f = exp(-5*(x-x0)**2 + ii*p0*(x-x0))
-       frs_(1,2*(ix-1))   = real(f)
-       frs_(1,2*(ix-1)+1) = aimag(f)
-       vs_(1,1,ix) = x**2
-    end do
+    call WPDy_set_psi0(calc_psi0, ierr); CHK_ERR(ierr)
+    call WPDy_set_vs(calc_vs, ierr); CHK_ERR(ierr)
     call WPDySOp_setup(ierr); CHK_ERR(ierr)
+    
     call WPDy_rn(0, norm2, ierr)
     EXPECT_EQ_D(1.0d0, norm2, ierr)
     
     do it = 1, 2
-       write(*,*) "it:", it
        call WPDySOp_inte((0.1d0, 0.0d0), ierr)       
     end do
     call WPDy_rn(0, norm2, ierr)
     EXPECT_EQ_D(1.0d0, norm2, ierr)
+    call WPDySOp_delete(ierr)
   end subroutine Test1
   subroutine Test2
     use Mod_const, only : ii
@@ -64,7 +85,7 @@ contains
     
     x0 = 1.0d0
     p0 = 1.0d0
-    call WPDySOp_new(nstate, 100, ierr); CHK_ERR(ierr)
+    call WPDySOp_new(nstate, 256, ierr); CHK_ERR(ierr)
     call WPDy_set_xs(-5.0d0, 0.1d0, ierr); CHK_ERR(ierr)
     do ix = 1, nx_
        f = exp(-(xs_(ix)-x0)**2 + ii*p0*(xs_(ix)-x0))
@@ -78,7 +99,6 @@ contains
     call WPDySOp_setup(ierr); CHK_ERR(ierr)
     
     do it = 1, 10
-       write(*,*) "it:", it
        call WPDySOp_inte((0.1d0, 0.0d0), ierr)
     end do
     call WPDy_rn(0, norm2, ierr)

@@ -39,33 +39,42 @@ contains
        xs_(i) = x0 + (i-1)*dx       
     end do
   end subroutine WPDy_set_xs
-  subroutine WPDy_set_vs(ifile, ierr)
-    integer, intent(in) :: ifile
+  subroutine WPDy_set_vs(calc_v, ierr)
+    interface
+       subroutine calc_v(x, v, ierr)
+         double precision, intent(in) :: x
+         double precision, intent(out) :: v(:,:)
+         integer, intent(out) :: ierr
+       end subroutine calc_v
+    end interface
     integer, intent(out) :: ierr
-    integer ii, jj, ix
-    double precision val
+    integer ix
     ierr = 0
-    read(ifile, *)
-    do
-       read(ifile, *, end=100) ii, jj, ix, val
-       vs_(ii,jj,ix) = val
+    do ix = 1, nx_
+       call calc_v(xs_(ix), vs_(:,:,ix), ierr); CHK_ERR(ierr)
     end do
-100 continue
   end subroutine WPDy_set_vs
-  subroutine WPDy_set_frs(ifile, ierr)
-    integer, intent(in) :: ifile
+  subroutine WPDy_set_psi0(calc_psi0, ierr)
+    interface
+       subroutine calc_psi0(x, y, ierr)
+         double precision, intent(in) :: x
+         complex(kind(0d0)), intent(out) :: y(:)
+         integer, intent(out) :: ierr
+       end subroutine calc_psi0
+    end interface
     integer, intent(out) :: ierr
+    complex(kind(0d0)) :: y(nstate_)
     integer ix, n
-    double precision re, im
     ierr = 0
-    read(ifile, *)
-    do
-       read(ifile, *, end=100) ix, n, re, im
-       frs_(n,2*(ix-1))   = re
-       frs_(n,2*(ix-1)+1) = im
+    do ix = 1, nx_
+       call calc_psi0(xs_(ix), y(:), ierr)
+       do n = 1, nstate_
+          frs_(n,2*(ix-1))   = real(y(n))
+          frs_(n,2*(ix-1)+1) = real(y(n))
+       end do
     end do
-100 continue
-  end subroutine WPDy_set_frs
+    
+  end subroutine WPDy_set_psi0
   subroutine WPDy_setup(ierr)
     integer, intent(out) :: ierr
     double precision norm
