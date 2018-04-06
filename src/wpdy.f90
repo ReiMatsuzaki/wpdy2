@@ -6,9 +6,7 @@ module Mod_WPDy
   double precision :: dx_
   complex(kind(0d0)) :: dt_
   double precision, allocatable :: xs_(:), vs_(:,:,:), cvs_(:), frs_(:,:), frs0_(:,:)
-  complex(kind(0d0)), allocatable :: f_(:,:)
   double precision :: m_
-  logical :: setupq_=.false.
 contains
   ! -- main --
   subroutine WPDy_new(nstate, nx, ierr)
@@ -25,7 +23,6 @@ contains
     allocate(cvs_(nx))    ! imaginary part of potential matrix
     allocate(frs_(nstate_, 0:2*nx-1))      ! real and imaginary part of WP
     allocate(frs0_(nstate_, 0:2*nx-1))     ! WP at t = 0
-    allocate(f_(nstate_, nx))
     
     xs_(:)     = 0.0d0
     vs_(:,:,:) = 0.0d0
@@ -70,30 +67,29 @@ contains
     complex(kind(0d0)) :: y(nstate_)
     integer ix, n
     ierr = 0
-    do ix = 1, nx_
-       call calc_psi0(xs_(ix), y(:), ierr)
+    do ix = 1, nx_       
+       call calc_psi0(xs_(ix), y(:), ierr)       
        do n = 1, nstate_
           frs_(n,2*(ix-1))   = real(y(n))
-          frs_(n,2*(ix-1)+1) = real(y(n))
+          frs_(n,2*(ix-1)+1) = aimag(y(n))
        end do
-    end do
-    
+    end do    
   end subroutine WPDy_set_psi0
   subroutine WPDy_setup(ierr)
     integer, intent(out) :: ierr
     double precision norm
     double precision, parameter :: tol = 1.0d-10
     ierr = 0
+    dx_ = xs_(2)-xs_(1)
     call WPDy_rn(0, norm, ierr); CHK_ERR(ierr)
     norm = sqrt(norm)
     if(norm < tol) then
        MSG_ERR("norm is too small")
        write(0,*) "norm:", norm
        ierr = 1; return
-    end if
+    end if    
     frs_(:,:) = frs_(:,:) / norm
     frs0_(:,:) = frs_(:,:)
-    setupq_ = .true.
   end subroutine WPDy_setup
   subroutine WPDy_con(it, ierr)
     use Mod_const, only : II
@@ -103,14 +99,13 @@ contains
     double precision :: d, prob(nstate_)
     integer n
     ierr = 0
-!    do ix = 1, nx_
-!       do n = 1, nstate_
-!          f_(n,ix) = frs_(n, 2*(ix-1)) + II*frs_(n, 2*(ix-1)+1)
-!       end do
-!    end do
+
+    if(it.eq.0) then
+       call con_wf1("_x", 0, xs_)
+    end if
     
     call con_wf("t", it,  it*abs(dt_))
-    call con_wf2("f", it, frs_)
+    call con_wf2("fr", it, frs_)
 
     call WPDy_rn(0, d, ierr)
     call con_wf("norm", it, d)
@@ -130,6 +125,15 @@ contains
     deallocate(xs_, vs_, cvs_, frs_, frs0_)
   end subroutine WPDy_delete
   ! -- calc --
+  subroutine WPDy_psi(n, i, res, ierr)
+    complex(kind(0d0)), intent(out) :: res
+    integer, intent(in)  :: i, n
+    integer, intent(out) :: ierr
+    
+    ierr = 0
+    res = dcmplx(frs_(n,2*(i-1)), frs_(n,2*(i-1)+1))
+    
+  end subroutine WPDy_psi
   subroutine WPDy_rn(n, res, ierr)
     integer, intent(in) :: n
     double precision, intent(out) :: res

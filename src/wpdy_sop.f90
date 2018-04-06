@@ -6,7 +6,6 @@ module Mod_WPDySOp
   implicit none
   double precision :: dk_, K_
   double precision, allocatable :: ks_(:)
-  logical :: splitop_setupq_=.false.
 contains
   ! -- main --
   subroutine WPDySOp_new(nstate, nx, ierr)
@@ -45,8 +44,6 @@ contains
     do i = 1, nx_
        ks_(i) = (i-nx_/2)*dk_
     end do
-
-    splitop_setupq_ = .true.
     
   end subroutine WPDySOp_setup
   subroutine WPDySOp_delete(ierr)
@@ -186,4 +183,39 @@ contains
     end do
     
   end subroutine Inte_2
+  subroutine WPDySOp_pn(n, res, ierr)
+    use Mod_const, only : II
+    integer, intent(in) :: n
+    double precision, intent(out) :: res
+    integer, intent(out) :: ierr
+    double precision :: fr(0:2*nx_-1), sqrt_nx
+    complex(kind(0d0)) :: ff
+    integer i
+    
+    ierr = 0
+    if(nstate_.ne.1) then
+       MSG_ERR("nstate!=1")
+       ierr = 1; return
+    end if
+
+    sqrt_nx = sqrt(1.0d0*nx_)
+    fr(0:2*nx_-1) = frs_(1, 0:2*nx_-1)
+    ! call fft_backward(fr(:), int(xs_(1)/dx_), -nx_/2+1)
+    call fft_backward(fr(:))
+    fr(:) = fr(:)/sqrt_nx
+    do i = 0, nx_-1
+       fr(2*i)   = fr(2*i)   * ks_(i+1)**n
+       fr(2*i+1) = fr(2*i+1) * ks_(i+1)**n
+    end do
+    !call fft_forward(fr(:),  -nx_/2+1, int(xs_(1)/dx_))
+    call fft_forward(fr(:))
+    fr(:) = fr(:)/sqrt_nx
+    res = 0
+    do i = 0, nx_-1
+       ff = dcmplx(frs_(1,2*i), -frs_(1,2*i+1)) * dcmplx(fr(2*i), fr(2*i+1))
+       res = res + real(ff)
+    end do
+    res = res*dx_
+    
+  end subroutine WPDySOp_pn
 end module Mod_WPDySOp

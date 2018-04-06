@@ -45,5 +45,5 @@ ${BUILD}/con.o:
 
 # -- exe --
 WPDYMODS=$(call mod2obj, ${MODS0} fft4g fftsg2d fft con wpdy wpdy_sop)
-${BUILD}/utest_wpdy.x: ${WPDYMODS}  utest utest_wpdy
+
 

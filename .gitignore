@@ -7,6 +7,6 @@ build/
 *.o
 *.mod
 *.err
-example/*/out
-example/*/*/out
-example/*/*/*/out
+exam/*/_con
+*.x
+*.pdf

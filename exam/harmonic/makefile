@@ -6,6 +6,8 @@ TARGET=run.x
 ${TARGET}: ${WPDYMODS} ${TARGET:%.x=%.f90}
 all: ${TARGET}
 	./$< > run.log
+	python plot.py
+	imgcat rho.pdf
 
 clean:
 	rm -rf *.mod
