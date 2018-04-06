@@ -4,9 +4,11 @@ module Mod_WPDy
   implicit none
   integer :: nx_, nstate_
   double precision :: dx_
-  complex(kind(0d0)) :: dt_
+  double precision dt_
+  integer nt_, ntskip_    
   double precision, allocatable :: xs_(:), vs_(:,:,:), cvs_(:), frs_(:,:), frs0_(:,:)
   double precision :: m_
+  complex(kind(0d0)) :: dtdy_
 contains
   ! -- main --
   subroutine WPDy_new(nstate, nx, ierr)
@@ -15,7 +17,9 @@ contains
     nx_ = nx
     nstate_ = nstate
     dx_ = 0.1d0
-    dt_ = 0.1d0
+    dt_ = 1.0d0
+    nt_ = 100
+    ntskip_ = 1
     m_ = 1.0d0
     ierr = 0
     allocate(xs_(nx))                     ! grid points
@@ -90,6 +94,7 @@ contains
     end if    
     frs_(:,:) = frs_(:,:) / norm
     frs0_(:,:) = frs_(:,:)
+    dtdy_ = dt_/ntskip_
   end subroutine WPDy_setup
   subroutine WPDy_con(it, ierr)
     use Mod_const, only : II
@@ -101,10 +106,17 @@ contains
     ierr = 0
 
     if(it.eq.0) then
+       call con_wi("_nx", 0, nx_)
+       call con_wi("_nstate", 0, nstate_)
+       call con_wf("_dx", 0, dx_)
+       call con_wf("_dt", 0, dt_)
+       call con_wf("_dtdy", 0, abs(dtdy_))
        call con_wf1("_x", 0, xs_)
+       call con_wf3("_v", 0, vs_)
+       call con_wf("_m",  0, m_)
     end if
     
-    call con_wf("t", it,  it*abs(dt_))
+    call con_wf("t", it,  it*dt_)
     call con_wf2("fr", it, frs_)
 
     call WPDy_rn(0, d, ierr)

@@ -57,9 +57,9 @@ contains
     integer, intent(out) :: ierr
     ierr = 0
     if(nstate_.eq.1) then
-       call inte_1(dt_, ierr); CHK_ERR(ierr)
+       call inte_1(dtdy_, ierr); CHK_ERR(ierr)
     else if(nstate_.eq.2) then
-       call inte_2(dt_, ierr); CHK_ERR(ierr)
+       call inte_2(dtdy_, ierr); CHK_ERR(ierr)
     else
        MSG_ERR("unsupported nstate")
        ierr = 1; return
@@ -108,6 +108,13 @@ contains
        frs_(1,2*i)   = real(fi)
        frs_(1,2*i+1) = aimag(fi)
     end do
+
+    !do i = 0, 2*nx_-1
+    !   if(abs(frs_(1,i)) < 1.0d-14) then
+    !      frs_(1,i) = 0.0d0
+    !   end if
+    !end do
+    
   end subroutine inte_1
   subroutine inte_2(dt, ierr)
     use Mod_const, only : ii

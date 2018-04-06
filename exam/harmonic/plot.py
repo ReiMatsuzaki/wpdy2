@@ -22,9 +22,6 @@ def run():
         fr = man['fr',it]
         f  = fr[0::2] + 1j*fr[1::2]
         plt.plot(x, f.real, label="calc,t={0}".format(ts[it]))
-        fa = man['fa_re',it]
-        plt.plot(x, fa, "--", label="exact,t={0}".format(ts[it]))
-        print(it, f[120-1], fa[120-1])
     plt.legend()
     plt.xlim(-5.0, 5.0)
     plt.savefig("rho.pdf")

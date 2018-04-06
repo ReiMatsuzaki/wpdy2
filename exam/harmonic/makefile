@@ -1,5 +1,5 @@
-include ../../local.mk
-include ../../conf.mk
+include ${HOME}/src/wpdy2/local.mk
+include ${WPDY2_ROOT}/conf.mk
 
 TARGET=run.x
 
@@ -14,4 +14,4 @@ clean:
 	rm -rf _con
 	rm -rf run.x
 	rm -rf *.log
-
+	rm -rf *.pdf

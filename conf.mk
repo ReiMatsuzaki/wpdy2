@@ -1,3 +1,5 @@
+PROJ_ROOT=${WPDY2_ROOT}
+
 # -- Directories --
 SRC=${PROJ_ROOT}/src
 BUILD=${PROJ_ROOT}/build
@@ -40,10 +42,10 @@ ${BUILD}/fftsg2d.o:
 	${FC} ${EXTERNAL}/fft2d/fftsg2d.f -c -o $@
 
 ${BUILD}/con.o:
-	cd ${BUILD}; ${FC} ${MAN4ROOT}/src/con.f ${FF} ${INCLUDE} -c -o $@
+	cd ${BUILD}; ${FC} ${MAN4_ROOT}/src/con.f ${FF} ${INCLUDE} -c -o $@
 
 
 # -- exe --
-WPDYMODS=$(call mod2obj, ${MODS0} fft4g fftsg2d fft con wpdy wpdy_sop)
+WPDYMODS=$(call mod2obj, ${MODS0} fft4g fftsg2d fft con wpdy wpdy_sop lambda)
 
 
